@@ -3,11 +3,10 @@ import Header from '../Header'
 
 import MovieContext from '../../context/MovieContext'
 import Footer from '../Footer'
+// import LoadingElement from '../LoaderElement'
+import PopularItem from '../PopularItem'
 
-import SearchElement from '../SearchElement'
-import './index.css'
-
-class SearchRoute extends Component {
+class Popular extends Component {
   //   state = {searchInput: ''}
 
   render() {
@@ -18,17 +17,17 @@ class SearchRoute extends Component {
           console.log('username from Home', {username})
 
           return (
-            <div className="search-main-container" data-testid="searchRoute">
-              <Header />
-              <div className="search-container">
-                <SearchElement />
+            <>
+              <div className="home-container" data-testid="popular">
+                <Header />
+                <PopularItem />
+                <Footer />
               </div>
-              <Footer />
-            </div>
+            </>
           )
         }}
       </MovieContext.Consumer>
     )
   }
 }
-export default SearchRoute
+export default Popular

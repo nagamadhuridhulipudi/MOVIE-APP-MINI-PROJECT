@@ -1,161 +1,159 @@
 import {Component} from 'react'
 import Cookies from 'js-cookie'
-import Loader from 'react-loader-spinner'
-import Heading from '../Header'
-import TrendingNowMovies from '../TrendingNowMovies'
-import OriginalsMovies from '../OriginalsMovies'
-import './index.css'
+import Header from '../Header'
+import Trending from '../Trending'
 
-const apiStatusConstants = {
+import './index.css'
+import MovieContext from '../../context/MovieContext'
+import Footer from '../Footer'
+import LoadingElement from '../LoaderElement'
+import Originals from '../Originals'
+import TopRated from '../TopRated'
+
+const apiConstants = {
   initial: 'INITIAL',
+  inProgress: 'INPROGRESS',
   success: 'SUCCESS',
   failure: 'FAILURE',
-  inProgress: 'IN_PROGRESS',
 }
 
 class Home extends Component {
   state = {
-    trendingMovies: [],
-    originalsMovies: [],
-    apiStatus: apiStatusConstants.initial,
+    apiStatus: apiConstants.initial,
+    allTrendingVideos: [],
   }
 
   componentDidMount() {
-    this.getTrendingNowMovies()
-    this.getOriginals()
+    this.getAllVideos()
   }
 
-  getTrendingNowMovies = async () => {
-    this.setState({
-      apiStatus: apiStatusConstants.inProgress,
-    })
+  getAllVideos = async () => {
+    this.setState({apiStatus: apiConstants.inProgress})
 
-    const apiUrl = 'https://apis.ccbp.in/movies-app/trending-movies'
+    const url = 'https://apis.ccbp.in/movies-app/originals'
     const jwtToken = Cookies.get('jwt_token')
     const options = {
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${jwtToken}`,
       },
-      method: 'GET',
     }
-    const response = await fetch(apiUrl, options)
-    // console.log(response)
+
+    const response = await fetch(url, options)
     if (response.ok) {
-      const fetchedData = await response.json()
-      console.log(fetchedData)
-      const updatedData = fetchedData.results.map(eachMovie => ({
-        backdropPath: eachMovie.backdrop_path,
-        posterPath: eachMovie.poster_path,
-        title: eachMovie.title,
-        id: eachMovie.id,
-        overview: eachMovie.overview,
+      const data = await response.json()
+
+      const updatedVideosList = data.results.map(each => ({
+        id: each.id,
+        backdropPath: each.backdrop_path,
+        overview: each.overview,
+        posterPath: each.poster_path,
+        title: each.title,
       }))
+
       this.setState({
-        trendingMovies: updatedData,
-        apiStatus: apiStatusConstants.success,
+        apiStatus: apiConstants.success,
+        allTrendingVideos: updatedVideosList,
       })
     } else {
-      this.setState({
-        apiStatus: apiStatusConstants.failure,
-      })
+      this.setState({apiStatus: apiConstants.failure})
     }
   }
 
-  getOriginals = async () => {
-    this.setState({
-      apiStatus: apiStatusConstants.inProgress,
-    })
-    const apiUrl = 'https://apis.ccbp.in/movies-app/originals'
-    const jwtToken = Cookies.get('jwt_token')
-    const options = {
-      headers: {
-        Authorization: `Bearer ${jwtToken}`,
-      },
-      method: 'GET',
-    }
-    const response = await fetch(apiUrl, options)
-    console.log(response)
-    if (response.ok) {
-      const fetchedData = await response.json()
-      // console.log(fetchedData)
-      const updatedData = fetchedData.results.map(eachMovie => ({
-        backdropPath: eachMovie.backdrop_path,
-        posterPath: eachMovie.poster_path,
-        title: eachMovie.title,
-        id: eachMovie.id,
-        overview: eachMovie.overview,
-      }))
-      this.setState({
-        originalsMovies: updatedData,
-        apiStatus: apiStatusConstants.success,
-      })
-    } else {
-      this.setState({
-        apiStatus: apiStatusConstants.failure,
-      })
-    }
-  }
+  render() {
+    const renderSuccessView = () => {
+      const {allTrendingVideos} = this.state
 
-  renderMoviesListView = () => {
-    const {trendingMovies, originalsMovies} = this.state
+      const homeHeaderItem =
+        allTrendingVideos[Math.floor(Math.random() * allTrendingVideos.length)]
 
-    return (
-      <>
-        <div className="home-image-card">
-          <div className="home-heading-card">
-            <h1 className="super-man-name">Super Man</h1>
-            <p className="home-details">
-              Superman is a fictional superhero who first appeared in American
-              comic books published by DC Comics.
-            </p>
-            <button type="button" className="play-button">
+      const backgroundImage = homeHeaderItem.backdropPath
+      const titleOfHeader = homeHeaderItem.title
+      const overviewOfHeader = homeHeaderItem.overview
+
+      return (
+        <div
+          className="spiderman-container"
+          style={{
+            backgroundImage: `url(${backgroundImage})`,
+            backgroundSize: '100% 100%',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          <Header />
+          <div className="home-header-content">
+            <h1 className="movie-details-name">{titleOfHeader}</h1>
+            <p className="movie-details-description">{overviewOfHeader}</p>
+            <button type="button" className="movies-details-play-button">
               Play
             </button>
           </div>
         </div>
-        <TrendingNowMovies trendingMovies={trendingMovies} />
-        <OriginalsMovies originalsMovies={originalsMovies} />
-      </>
-    )
-  }
-
-  renderAllMovies = () => {
-    const {apiStatus} = this.state
-
-    switch (apiStatus) {
-      case apiStatusConstants.success:
-        return this.renderMoviesListView()
-      case apiStatusConstants.failure:
-        return this.renderFailureView()
-      case apiStatusConstants.inProgress:
-        return this.renderLoadingView()
-      default:
-        return null
+      )
     }
-  }
 
-  renderLoadingView = () => (
-    <div
-      className="loader-container"
-      // data-testid="loader"
-    >
-      <Loader type="TailSpin" color="#D81F26" height={50} width={50} />
-    </div>
-  )
+    const renderMovieItem = () => {
+      this.getAllVideos()
+    }
 
-  render() {
-    const {trendingMovies, originalsMovies} = this.state
-    console.log(trendingMovies)
-    console.log(originalsMovies)
-    //   const {backdropPath, overview, id, title} = originalsMovies
+    const renderLoader = () => <LoadingElement />
+
+    const renderFailureView = () => (
+      <div className="failure-view-container">
+        <img
+          alt="failure view"
+          src="https://res.cloudinary.com/dtjcxf7z5/image/upload/v1650297174/Mini%20Project%20Netflix%20Clone/Background-Complete_t8c6zl.png"
+          className="failure-image"
+        />
+        <p className="search-content">Something went wrong. Please try again</p>
+
+        <button
+          type="button"
+          className="try-again-button"
+          onClick={renderMovieItem}
+        >
+          Try again
+        </button>
+      </div>
+    )
+
+    const getResult = () => {
+      const {apiStatus} = this.state
+      switch (apiStatus) {
+        case apiConstants.success:
+          return renderSuccessView()
+        case apiConstants.failure:
+          return renderFailureView()
+        case apiConstants.inProgress:
+          return renderLoader()
+        default:
+          return null
+      }
+    }
 
     return (
-      <div className="home-container">
-        <Heading />
-        {this.renderAllMovies()}
-      </div>
+      <MovieContext.Consumer>
+        {value => {
+          const {username} = value
+          console.log('username from Home', {username})
+
+          return (
+            <>
+              <div className="home-container" data-testid="home">
+                {getResult()}
+                <h1 className="trending-heading">Trending Now</h1>
+                <Trending />
+                <h1 className="trending-heading">Top Rated</h1>
+                <TopRated />
+                <h1 className="trending-heading">Originals</h1>
+                <Originals />
+              </div>
+              <Footer />
+            </>
+          )
+        }}
+      </MovieContext.Consumer>
     )
   }
 }
-
 export default Home

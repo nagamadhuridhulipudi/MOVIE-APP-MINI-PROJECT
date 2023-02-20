@@ -1,25 +1,17 @@
+import {Link} from 'react-router-dom'
+
 import './index.css'
 
-const NotFound = props => {
-  const {onClickRetry} = props
-
-  const tryAgain = () => {
-    onClickRetry()
-  }
-
-  return (
-    <div className="failed-view-container">
-      <img
-        src="https://res.cloudinary.com/ddry7fpzp/image/upload/v1662697146/FailureIcon_mos7ed.png"
-        alt="failure view"
-        className="failure-view"
-      />
-      <p className="failed-text">Something went wrong. Please try again</p>
-      <button type="button" className="retry-button" onClick={tryAgain}>
-        Try Again
-      </button>
-    </div>
-  )
-}
-
+const NotFound = () => (
+  <div className="failureContainer" data-testid="not found">
+    <h1>Lost Your way</h1>
+    <p>
+      we are sorry, the page you requested could not be found Please go back to
+      the homepage.
+    </p>
+    <Link to="/">
+      <button type="button">Go to Home</button>
+    </Link>
+  </div>
+)
 export default NotFound

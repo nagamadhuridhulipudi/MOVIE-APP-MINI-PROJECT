@@ -1,112 +1,129 @@
 import {Component} from 'react'
 import Cookies from 'js-cookie'
+import {Redirect} from 'react-router-dom'
 
+import MovieContext from '../../context/MovieContext'
 import './index.css'
 
 class Login extends Component {
-  state = {username: '', password: '', showSubmitError: false, errorMsg: ''}
-
-  onSubmitFailure = errorMsg => {
-    this.setState({showSubmitError: true, errorMsg})
-  }
-
-  onSubmitSuccess = jwtToken => {
-    const {history} = this.props
-
-    Cookies.set('jwt_token', jwtToken, {
-      expires: 30,
-    })
-    history.replace('/')
-  }
-
-  submitForm = async event => {
-    event.preventDefault()
-    const {username, password} = this.state
-    const userDetails = {username, password}
-    const url = 'https://apis.ccbp.in/login'
-    const options = {
-      method: 'POST',
-      body: JSON.stringify(userDetails),
-    }
-    const response = await fetch(url, options)
-    const data = await response.json()
-    // const message = data.error_msg
-    console.log(response)
-    if (response.ok === true) {
-      this.onSubmitSuccess(data.jwt_token)
-    } else {
-      //  this.setState({errorMsg: message})
-      this.onSubmitFailure(data.error_msg)
-    }
-  }
-
-  onChangePassword = event => {
-    this.setState({password: event.target.value})
-  }
-
-  onChangeUsername = event => {
-    this.setState({username: event.target.value})
-  }
-
-  renderUsernameField = () => {
-    const {username} = this.state
-
-    return (
-      <>
-        <label className="label-input" htmlFor="username">
-          USERNAME
-        </label>
-        <input
-          type="text"
-          id="username"
-          className="user-input"
-          value={username}
-          onChange={this.onChangeUsername}
-          placeholder="Username"
-        />
-      </>
-    )
-  }
-
-  renderPasswordField = () => {
-    const {password} = this.state
-
-    return (
-      <>
-        <label className="label-input" htmlFor="password">
-          PASSWORD
-        </label>
-        <input
-          type="password"
-          id="password"
-          className="user-input"
-          value={password}
-          onChange={this.onChangePassword}
-          placeholder="Password"
-        />
-      </>
-    )
+  state = {
+    showSubmitError: false,
+    errorMsg: '',
   }
 
   render() {
-    const {showSubmitError, errorMsg} = this.state
     return (
-      <div className="login-container">
-        <img
-          alt="movies"
-          className="movie-image"
-          src="https://res.cloudinary.com/dr4h73xhp/image/upload/v1668663235/Group_7399_kernfa.png"
-        />
-        <form className="form-container" onSubmit={this.submitForm}>
-          <h1 className="login-name">Login</h1>
-          <div className="input-label-card">{this.renderUsernameField()}</div>
-          <div className="input-label-card">{this.renderPasswordField()}</div>
-          {showSubmitError && <p className="error-message">{errorMsg}</p>}
-          <button type="submit" className="login-button">
-            Login
-          </button>
-        </form>
-      </div>
+      <MovieContext.Consumer>
+        {value => {
+          const {
+            username,
+            password,
+            triggerChangeUsername,
+            triggerChangePassword,
+          } = value
+
+          const onChangeUsername = event => {
+            triggerChangeUsername(event)
+          }
+
+          const onChangePassword = event => {
+            triggerChangePassword(event)
+          }
+
+          const onSubmitSuccess = jwtToken => {
+            const {history} = this.props
+
+            Cookies.set('jwt_token', jwtToken, {
+              expires: 30,
+            })
+            history.replace('/')
+          }
+
+          const onSubmitFailure = errorMsg => {
+            this.setState({showSubmitError: true, errorMsg})
+          }
+
+          const submitNetflixForm = async event => {
+            event.preventDefault()
+
+            const userDetails = {username, password}
+            const url = 'https://apis.ccbp.in/login'
+            const options = {
+              method: 'POST',
+              body: JSON.stringify(userDetails),
+            }
+            const response = await fetch(url, options)
+            const data = await response.json()
+            if (response.ok === true) {
+              onSubmitSuccess(data.jwt_token)
+            } else {
+              onSubmitFailure(data.error_msg)
+            }
+          }
+
+          const renderPasswordField = () => (
+            <>
+              <label className="input-label" htmlFor="password">
+                PASSWORD
+              </label>
+              <input
+                type="password"
+                id="password"
+                className="password-input-field"
+                value={password}
+                onChange={onChangePassword}
+                placeholder="Password"
+              />
+            </>
+          )
+
+          const renderUsernameField = () => (
+            <>
+              <label className="input-label" htmlFor="username">
+                USERNAME
+              </label>
+              <input
+                type="text"
+                id="username"
+                className="username-input-field"
+                value={username}
+                onChange={onChangeUsername}
+                placeholder="Username"
+              />
+            </>
+          )
+
+          const {showSubmitError, errorMsg} = this.state
+          const jwtToken = Cookies.get('jwt_token')
+
+          if (jwtToken !== undefined) {
+            return <Redirect to="/" />
+          }
+
+          return (
+            <div className="login-form-container">
+              <div>
+                <img
+                  src="https://res.cloudinary.com/dtjcxf7z5/image/upload/v1650191862/Mini%20Project%20Netflix%20Clone/MoviesIcon_snclt2.png"
+                  alt="login website logo"
+                />
+              </div>
+
+              <form className="form-container" onSubmit={submitNetflixForm}>
+                <h1 className="login-heading">Login</h1>
+                <div className="input-container">{renderUsernameField()}</div>
+                <div className="input-container">{renderPasswordField()}</div>
+                {showSubmitError && (
+                  <p className="error-message">*{errorMsg}</p>
+                )}
+                <button type="submit" className="login-button">
+                  Login
+                </button>
+              </form>
+            </div>
+          )
+        }}
+      </MovieContext.Consumer>
     )
   }
 }
